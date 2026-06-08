@@ -1,3 +1,5 @@
 - [Orval TanStack Query v5 type fix](orval-query-options.md) — query options need `as any` cast due to `UseQueryOptions` requiring `queryKey` in v5
 - [API hook naming](api-hook-naming.md) — billing plans hook is `useListBillingPlans`, not `useGetBillingPlans`; always verify generated names before use
 - [Auth pattern](auth-pattern.md) — JWT in localStorage, Bearer token in Authorization header; `requireAuth` middleware validates; `useAuth()` context in frontend
+- [Comments table primary key](comments-schema.md) — `id` is `text` PK (the YouTube comment ID), not a serial; must supply `id` on insert
+- [Stateless JWT logout](stateless-jwt-logout.md) — logout route should NOT use `requireAuth` (JWT is stateless); client must clear localStorage in a try/catch so logout always succeeds locally

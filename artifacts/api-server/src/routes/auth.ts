@@ -69,7 +69,7 @@ router.get("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<void>
   res.json({ id: user.id, name: user.name, email: user.email, avatarUrl: user.avatarUrl, tier: user.tier, createdAt: user.createdAt });
 });
 
-router.delete("/auth/logout", requireAuth, async (_req, res): Promise<void> => {
+router.delete("/auth/logout", async (_req, res): Promise<void> => {
   res.sendStatus(204);
 });
 

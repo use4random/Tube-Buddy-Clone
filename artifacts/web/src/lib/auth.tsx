@@ -55,7 +55,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await logoutMutation.mutateAsync();
+    try {
+      await logoutMutation.mutateAsync();
+    } catch {
+      // JWT is stateless — clear locally regardless of server response
+    }
     localStorage.removeItem("token");
     setToken(null);
     setLocation("/login");

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useChannelContext } from "@/lib/channel";
 import { useGetChannelAnalytics, useGetBestPublishTime } from "@workspace/api-client-react";
@@ -158,12 +158,12 @@ export default function AnalyticsPage() {
                           <div key={h} className="text-center">{h === 0 ? "12a" : h < 12 ? `${h}a` : h === 12 ? "12p" : `${h - 12}p`}</div>
                         ))}
                         {DAYS.map((day, d) => (
-                          <>
-                            <div key={`label-${d}`} className="text-right pr-2 flex items-center">{day}</div>
+                          <React.Fragment key={d}>
+                            <div className="text-right pr-2 flex items-center">{day}</div>
                             {Array.from({ length: 24 }, (_, h) => (
                               <HeatmapCell key={`${d}-${h}`} score={heatmapByDay[d]?.[h] ?? 0} />
                             ))}
-                          </>
+                          </React.Fragment>
                         ))}
                       </div>
                       <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
