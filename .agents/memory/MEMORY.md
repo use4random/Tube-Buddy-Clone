@@ -1,0 +1,3 @@
+- [Orval TanStack Query v5 type fix](orval-query-options.md) — query options need `as any` cast due to `UseQueryOptions` requiring `queryKey` in v5
+- [API hook naming](api-hook-naming.md) — billing plans hook is `useListBillingPlans`, not `useGetBillingPlans`; always verify generated names before use
+- [Auth pattern](auth-pattern.md) — JWT in localStorage, Bearer token in Authorization header; `requireAuth` middleware validates; `useAuth()` context in frontend

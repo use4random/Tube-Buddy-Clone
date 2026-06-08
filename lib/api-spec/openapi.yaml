@@ -3,20 +3,46 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: TubePulse API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: channels
+    description: YouTube channel management
+  - name: keywords
+    description: Keyword research and SEO
+  - name: seo
+    description: SEO scoring
+  - name: experiments
+    description: A/B testing experiments
+  - name: bulk
+    description: Bulk editing jobs
+  - name: analytics
+    description: Channel and video analytics
+  - name: competitors
+    description: Competitor tracking
+  - name: comments
+    description: Comment management
+  - name: canned-responses
+    description: Canned response library
+  - name: ai
+    description: AI-powered content tools
+  - name: billing
+    description: Subscription billing
+  - name: dashboard
+    description: Dashboard summary
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +50,802 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    delete:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "204":
+          description: Logged out
+
+  /channels:
+    get:
+      operationId: listChannels
+      tags: [channels]
+      summary: List connected channels
+      responses:
+        "200":
+          description: List of channels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Channel"
+    post:
+      operationId: connectChannel
+      tags: [channels]
+      summary: Connect a YouTube channel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChannelInput"
+      responses:
+        "201":
+          description: Channel connected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Channel"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /channels/{channelId}:
+    get:
+      operationId: getChannel
+      tags: [channels]
+      summary: Get a channel
+      parameters:
+        - in: path
+          name: channelId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Channel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Channel"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: disconnectChannel
+      tags: [channels]
+      summary: Disconnect a channel
+      parameters:
+        - in: path
+          name: channelId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Disconnected
+
+  /keywords/search:
+    get:
+      operationId: searchKeywords
+      tags: [keywords]
+      summary: Search for keyword data
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: channelId
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Keyword search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KeywordSearchResult"
+
+  /keywords/suggestions:
+    get:
+      operationId: getKeywordSuggestions
+      tags: [keywords]
+      summary: Get tag suggestions for a video
+      parameters:
+        - in: query
+          name: videoId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: channelId
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tag suggestions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KeywordSuggestion"
+
+  /keywords/rankings:
+    get:
+      operationId: getKeywordRankings
+      tags: [keywords]
+      summary: Get tag ranking history for a video
+      parameters:
+        - in: query
+          name: channelId
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: videoId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ranking history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KeywordRanking"
+
+  /seo/score:
+    post:
+      operationId: scoreSeo
+      tags: [seo]
+      summary: Score video SEO metadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeoScoreInput"
+      responses:
+        "200":
+          description: SEO score and recommendations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeoScoreResult"
+
+  /experiments:
+    get:
+      operationId: listExperiments
+      tags: [experiments]
+      summary: List A/B experiments for a channel
+      parameters:
+        - in: query
+          name: channelId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of experiments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Experiment"
+    post:
+      operationId: createExperiment
+      tags: [experiments]
+      summary: Create a new A/B experiment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExperimentInput"
+      responses:
+        "201":
+          description: Experiment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Experiment"
+
+  /experiments/{experimentId}:
+    get:
+      operationId: getExperiment
+      tags: [experiments]
+      summary: Get experiment details
+      parameters:
+        - in: path
+          name: experimentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Experiment details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExperimentDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /experiments/{experimentId}/apply-winner:
+    post:
+      operationId: applyExperimentWinner
+      tags: [experiments]
+      summary: Apply the winning variant permanently
+      parameters:
+        - in: path
+          name: experimentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Winner applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Experiment"
+
+  /experiments/{experimentId}/status:
+    patch:
+      operationId: updateExperimentStatus
+      tags: [experiments]
+      summary: Pause or resume an experiment
+      parameters:
+        - in: path
+          name: experimentId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExperimentStatusUpdate"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Experiment"
+
+  /bulk/update:
+    post:
+      operationId: submitBulkUpdate
+      tags: [bulk]
+      summary: Submit a bulk video update job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkUpdateInput"
+      responses:
+        "201":
+          description: Bulk job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkJob"
+
+  /bulk/find-replace:
+    post:
+      operationId: submitBulkFindReplace
+      tags: [bulk]
+      summary: Submit a bulk find-and-replace job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkFindReplaceInput"
+      responses:
+        "201":
+          description: Bulk job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkJob"
+
+  /bulk/jobs:
+    get:
+      operationId: listBulkJobs
+      tags: [bulk]
+      summary: List bulk jobs for a channel
+      parameters:
+        - in: query
+          name: channelId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of bulk jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BulkJob"
+
+  /bulk/jobs/{jobId}:
+    get:
+      operationId: getBulkJob
+      tags: [bulk]
+      summary: Get bulk job status
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkJob"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /analytics/channel:
+    get:
+      operationId: getChannelAnalytics
+      tags: [analytics]
+      summary: Get channel analytics metrics
+      parameters:
+        - in: query
+          name: channelId
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: range
+          required: false
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, 1y]
+      responses:
+        "200":
+          description: Channel analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelAnalytics"
+
+  /analytics/video:
+    get:
+      operationId: getVideoAnalytics
+      tags: [analytics]
+      summary: Get per-video analytics metrics
+      parameters:
+        - in: query
+          name: videoId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: channelId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Video analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VideoAnalytics"
+
+  /analytics/best-time:
+    get:
+      operationId: getBestPublishTime
+      tags: [analytics]
+      summary: Get best publish time heatmap
+      parameters:
+        - in: query
+          name: channelId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Best publish time heatmap
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BestTimeResult"
+
+  /competitors:
+    get:
+      operationId: listCompetitors
+      tags: [competitors]
+      summary: List tracked competitors
+      parameters:
+        - in: query
+          name: channelId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of competitors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Competitor"
+    post:
+      operationId: addCompetitor
+      tags: [competitors]
+      summary: Add a competitor channel to track
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompetitorInput"
+      responses:
+        "201":
+          description: Competitor added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Competitor"
+
+  /competitors/{competitorId}:
+    delete:
+      operationId: removeCompetitor
+      tags: [competitors]
+      summary: Remove a competitor
+      parameters:
+        - in: path
+          name: competitorId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
+
+  /comments:
+    get:
+      operationId: listComments
+      tags: [comments]
+      summary: List filtered comments for a channel
+      parameters:
+        - in: query
+          name: channelId
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: filter
+          required: false
+          schema:
+            type: string
+            enum: [unanswered, flagged, recent, all]
+      responses:
+        "200":
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+
+  /comments/{commentId}/reply:
+    post:
+      operationId: replyToComment
+      tags: [comments]
+      summary: Reply to a comment
+      parameters:
+        - in: path
+          name: commentId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentReplyInput"
+      responses:
+        "200":
+          description: Reply posted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+  /canned-responses:
+    get:
+      operationId: listCannedResponses
+      tags: [canned-responses]
+      summary: List canned responses for a channel
+      parameters:
+        - in: query
+          name: channelId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of canned responses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CannedResponse"
+    post:
+      operationId: createCannedResponse
+      tags: [canned-responses]
+      summary: Create a canned response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CannedResponseInput"
+      responses:
+        "201":
+          description: Canned response created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CannedResponse"
+
+  /canned-responses/{id}:
+    delete:
+      operationId: deleteCannedResponse
+      tags: [canned-responses]
+      summary: Delete a canned response
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /ai/titles:
+    post:
+      operationId: generateTitles
+      tags: [ai]
+      summary: Generate AI title suggestions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TitleGeneratorInput"
+      responses:
+        "200":
+          description: Generated titles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TitleGeneratorResult"
+
+  /ai/description:
+    post:
+      operationId: generateDescription
+      tags: [ai]
+      summary: Generate AI video description
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DescriptionGeneratorInput"
+      responses:
+        "200":
+          description: Generated description
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DescriptionGeneratorResult"
+
+  /ai/tags:
+    post:
+      operationId: generateTags
+      tags: [ai]
+      summary: Generate AI tag suggestions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagGeneratorInput"
+      responses:
+        "200":
+          description: Generated tags
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TagGeneratorResult"
+
+  /ai/ideas:
+    post:
+      operationId: generateVideoIdeas
+      tags: [ai]
+      summary: Generate AI video ideas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoIdeaInput"
+      responses:
+        "200":
+          description: Generated video ideas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VideoIdeaResult"
+
+  /billing/plans:
+    get:
+      operationId: listBillingPlans
+      tags: [billing]
+      summary: List available subscription plans
+      responses:
+        "200":
+          description: Available plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BillingPlan"
+
+  /billing/subscription:
+    get:
+      operationId: getSubscription
+      tags: [billing]
+      summary: Get current user subscription
+      responses:
+        "200":
+          description: Current subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary for a channel
+      parameters:
+        - in: query
+          name: channelId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +856,799 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    RegisterInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      required: [id, name, email, tier, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        tier:
+          type: string
+          enum: [free, pro, legend, enterprise]
+        createdAt:
+          type: string
+          format: date-time
+
+    Channel:
+      type: object
+      required: [id, userId, youtubeChannelId, name, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        youtubeChannelId:
+          type: string
+        name:
+          type: string
+        handle:
+          type: ["string", "null"]
+        thumbnailUrl:
+          type: ["string", "null"]
+        subscriberCount:
+          type: ["integer", "null"]
+        videoCount:
+          type: ["integer", "null"]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    ChannelInput:
+      type: object
+      required: [youtubeChannelId, name]
+      properties:
+        youtubeChannelId:
+          type: string
+        name:
+          type: string
+        handle:
+          type: string
+        thumbnailUrl:
+          type: string
+        subscriberCount:
+          type: integer
+        videoCount:
+          type: integer
+
+    Subscription:
+      type: object
+      required: [id, userId, tier, status, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        tier:
+          type: string
+          enum: [free, pro, legend, enterprise]
+        status:
+          type: string
+          enum: [active, canceled, past_due, trialing]
+        currentPeriodEnd:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    BillingPlan:
+      type: object
+      required: [id, name, tier, monthlyPrice, annualPrice, features]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        tier:
+          type: string
+          enum: [free, pro, legend, enterprise]
+        monthlyPrice:
+          type: number
+        annualPrice:
+          type: number
+        features:
+          type: array
+          items:
+            type: string
+
+    KeywordSearchResult:
+      type: object
+      required: [query, keywords]
+      properties:
+        query:
+          type: string
+        keywords:
+          type: array
+          items:
+            $ref: "#/components/schemas/KeywordData"
+
+    KeywordData:
+      type: object
+      required: [query, searchVolume, competitionScore, overallScore, relatedKeywords, trendData]
+      properties:
+        query:
+          type: string
+        searchVolume:
+          type: string
+          enum: [very_low, low, medium, high, very_high]
+        competitionScore:
+          type: integer
+        overallScore:
+          type: integer
+        relatedKeywords:
+          type: array
+          items:
+            type: string
+        trendData:
+          type: array
+          items:
+            type: number
+
+    KeywordSuggestion:
+      type: object
+      required: [tag, score, searchVolume]
+      properties:
+        tag:
+          type: string
+        score:
+          type: integer
+        searchVolume:
+          type: string
+          enum: [very_low, low, medium, high, very_high]
+
+    KeywordRanking:
+      type: object
+      required: [tag, rank, date]
+      properties:
+        tag:
+          type: string
+        rank:
+          type: ["integer", "null"]
+        date:
+          type: string
+          format: date
+
+    SeoScoreInput:
+      type: object
+      required: [title, description, tags]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        targetKeyword:
+          type: string
+        channelId:
+          type: integer
+
+    SeoScoreResult:
+      type: object
+      required: [overallScore, titleScore, descriptionScore, tagsScore, recommendations]
+      properties:
+        overallScore:
+          type: integer
+        titleScore:
+          type: integer
+        descriptionScore:
+          type: integer
+        tagsScore:
+          type: integer
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeoRecommendation"
+
+    SeoRecommendation:
+      type: object
+      required: [type, message, priority]
+      properties:
+        type:
+          type: string
+          enum: [title, description, tags]
+        message:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high]
+
+    Experiment:
+      type: object
+      required: [id, channelId, videoId, type, status, createdAt]
+      properties:
+        id:
+          type: integer
+        channelId:
+          type: integer
+        videoId:
+          type: string
+        videoTitle:
+          type: ["string", "null"]
+        type:
+          type: string
+          enum: [thumbnail, title, both]
+        status:
+          type: string
+          enum: [active, paused, complete]
+        activeVariant:
+          type: ["string", "null"]
+        winnerVariant:
+          type: ["string", "null"]
+        confidenceLevel:
+          type: ["number", "null"]
+        startedAt:
+          type: ["string", "null"]
+        endedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ExperimentDetail:
+      type: object
+      required: [id, channelId, videoId, type, status, variants, createdAt]
+      properties:
+        id:
+          type: integer
+        channelId:
+          type: integer
+        videoId:
+          type: string
+        videoTitle:
+          type: ["string", "null"]
+        type:
+          type: string
+          enum: [thumbnail, title, both]
+        status:
+          type: string
+          enum: [active, paused, complete]
+        activeVariant:
+          type: ["string", "null"]
+        winnerVariant:
+          type: ["string", "null"]
+        confidenceLevel:
+          type: ["number", "null"]
+        startedAt:
+          type: ["string", "null"]
+        endedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        variants:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExperimentVariant"
+
+    ExperimentVariant:
+      type: object
+      required: [id, experimentId, variantLabel]
+      properties:
+        id:
+          type: integer
+        experimentId:
+          type: integer
+        variantLabel:
+          type: string
+          enum: [A, B]
+        thumbnailUrl:
+          type: ["string", "null"]
+        title:
+          type: ["string", "null"]
+        impressions:
+          type: integer
+        clicks:
+          type: integer
+        ctr:
+          type: number
+        views:
+          type: integer
+
+    ExperimentInput:
+      type: object
+      required: [channelId, videoId, type, variantA, variantB]
+      properties:
+        channelId:
+          type: integer
+        videoId:
+          type: string
+        videoTitle:
+          type: string
+        type:
+          type: string
+          enum: [thumbnail, title, both]
+        variantA:
+          $ref: "#/components/schemas/VariantInput"
+        variantB:
+          $ref: "#/components/schemas/VariantInput"
+
+    VariantInput:
+      type: object
+      properties:
+        thumbnailUrl:
+          type: string
+        title:
+          type: string
+
+    ExperimentStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [active, paused]
+
+    BulkJob:
+      type: object
+      required: [id, channelId, userId, operationType, status, totalVideos, processedVideos, createdAt]
+      properties:
+        id:
+          type: integer
+        channelId:
+          type: integer
+        userId:
+          type: integer
+        operationType:
+          type: string
+          enum: [update, find_replace]
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        totalVideos:
+          type: integer
+        processedVideos:
+          type: integer
+        errors:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: ["string", "null"]
+
+    BulkUpdateInput:
+      type: object
+      required: [channelId, videoIds, changes]
+      properties:
+        channelId:
+          type: integer
+        videoIds:
+          type: array
+          items:
+            type: string
+        changes:
+          $ref: "#/components/schemas/VideoChanges"
+
+    VideoChanges:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        visibility:
+          type: string
+          enum: [public, private, unlisted]
+
+    BulkFindReplaceInput:
+      type: object
+      required: [channelId, search, replace, scope]
+      properties:
+        channelId:
+          type: integer
+        search:
+          type: string
+        replace:
+          type: string
+        scope:
+          type: array
+          items:
+            type: string
+            enum: [title, description, tags]
+        isRegex:
+          type: boolean
+
+    ChannelAnalytics:
+      type: object
+      required: [channelId, range, views, watchTimeHours, subscribers, estimatedRevenue, topVideos, dailyMetrics]
+      properties:
+        channelId:
+          type: integer
+        range:
+          type: string
+        views:
+          type: integer
+        watchTimeHours:
+          type: number
+        subscribers:
+          type: integer
+        subscriberGain:
+          type: integer
+        averageCtr:
+          type: number
+        estimatedRevenue:
+          type: number
+        topVideos:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopVideo"
+        dailyMetrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyMetric"
+
+    TopVideo:
+      type: object
+      required: [videoId, title, views, ctr]
+      properties:
+        videoId:
+          type: string
+        title:
+          type: string
+        views:
+          type: integer
+        ctr:
+          type: number
+        thumbnailUrl:
+          type: ["string", "null"]
+
+    DailyMetric:
+      type: object
+      required: [date, views, watchTimeHours, subscribers]
+      properties:
+        date:
+          type: string
+          format: date
+        views:
+          type: integer
+        watchTimeHours:
+          type: number
+        subscribers:
+          type: integer
+
+    VideoAnalytics:
+      type: object
+      required: [videoId, title, views, watchTimeHours, averageViewDuration, ctr, impressions, likes, comments]
+      properties:
+        videoId:
+          type: string
+        title:
+          type: string
+        views:
+          type: integer
+        watchTimeHours:
+          type: number
+        averageViewDuration:
+          type: number
+        ctr:
+          type: number
+        impressions:
+          type: integer
+        likes:
+          type: integer
+        comments:
+          type: integer
+        estimatedRevenue:
+          type: number
+
+    BestTimeResult:
+      type: object
+      required: [heatmap]
+      properties:
+        heatmap:
+          type: array
+          items:
+            $ref: "#/components/schemas/HeatmapCell"
+
+    HeatmapCell:
+      type: object
+      required: [dayOfWeek, hourOfDay, score]
+      properties:
+        dayOfWeek:
+          type: integer
+        hourOfDay:
+          type: integer
+        score:
+          type: number
+
+    Competitor:
+      type: object
+      required: [id, channelId, youtubeChannelId, name, createdAt]
+      properties:
+        id:
+          type: integer
+        channelId:
+          type: integer
+        youtubeChannelId:
+          type: string
+        name:
+          type: string
+        handle:
+          type: ["string", "null"]
+        thumbnailUrl:
+          type: ["string", "null"]
+        subscriberCount:
+          type: ["integer", "null"]
+        averageViews:
+          type: ["integer", "null"]
+        uploadFrequency:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    CompetitorInput:
+      type: object
+      required: [channelId, youtubeChannelId, name]
+      properties:
+        channelId:
+          type: integer
+        youtubeChannelId:
+          type: string
+        name:
+          type: string
+        handle:
+          type: string
+        thumbnailUrl:
+          type: string
+
+    Comment:
+      type: object
+      required: [id, channelId, videoId, authorName, text, publishedAt]
+      properties:
+        id:
+          type: string
+        channelId:
+          type: integer
+        videoId:
+          type: string
+        videoTitle:
+          type: ["string", "null"]
+        authorName:
+          type: string
+        authorAvatarUrl:
+          type: ["string", "null"]
+        text:
+          type: string
+        likeCount:
+          type: integer
+        isReplied:
+          type: boolean
+        isFlagged:
+          type: boolean
+        publishedAt:
+          type: string
+          format: date-time
+
+    CommentReplyInput:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+        channelId:
+          type: integer
+
+    CannedResponse:
+      type: object
+      required: [id, channelId, label, body, useCount, createdAt]
+      properties:
+        id:
+          type: integer
+        channelId:
+          type: integer
+        label:
+          type: string
+        body:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        useCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    CannedResponseInput:
+      type: object
+      required: [channelId, label, body]
+      properties:
+        channelId:
+          type: integer
+        label:
+          type: string
+        body:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    TitleGeneratorInput:
+      type: object
+      required: [topic, keyword]
+      properties:
+        topic:
+          type: string
+        keyword:
+          type: string
+        channelId:
+          type: integer
+
+    TitleGeneratorResult:
+      type: object
+      required: [titles]
+      properties:
+        titles:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeneratedTitle"
+
+    GeneratedTitle:
+      type: object
+      required: [title, seoScore, predictedCtr]
+      properties:
+        title:
+          type: string
+        seoScore:
+          type: integer
+        predictedCtr:
+          type: number
+
+    DescriptionGeneratorInput:
+      type: object
+      required: [title, keyPoints]
+      properties:
+        title:
+          type: string
+        keyPoints:
+          type: array
+          items:
+            type: string
+        channelId:
+          type: integer
+
+    DescriptionGeneratorResult:
+      type: object
+      required: [description]
+      properties:
+        description:
+          type: string
+
+    TagGeneratorInput:
+      type: object
+      required: [title, description]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        channelId:
+          type: integer
+
+    TagGeneratorResult:
+      type: object
+      required: [tags]
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+
+    VideoIdeaInput:
+      type: object
+      required: [channelId]
+      properties:
+        channelId:
+          type: integer
+        count:
+          type: integer
+
+    VideoIdeaResult:
+      type: object
+      required: [ideas]
+      properties:
+        ideas:
+          type: array
+          items:
+            $ref: "#/components/schemas/VideoIdea"
+
+    VideoIdea:
+      type: object
+      required: [title, description, estimatedDemand]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        targetKeyword:
+          type: string
+        estimatedDemand:
+          type: string
+          enum: [low, medium, high, very_high]
+
+    DashboardSummary:
+      type: object
+      required: [channelId, totalViews, totalSubscribers, activeExperiments, pendingBulkJobs, recentKeywordSearches, seoScoreAverage]
+      properties:
+        channelId:
+          type: integer
+        totalViews:
+          type: integer
+        totalSubscribers:
+          type: integer
+        viewsGrowth:
+          type: number
+        subscriberGrowth:
+          type: number
+        activeExperiments:
+          type: integer
+        completedExperiments:
+          type: integer
+        pendingBulkJobs:
+          type: integer
+        recentKeywordSearches:
+          type: integer
+        seoScoreAverage:
+          type: number
+        topPerformingTag:
+          type: ["string", "null"]
+        estimatedMonthlyRevenue:
+          type: number
