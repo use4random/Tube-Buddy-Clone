@@ -1,0 +1,714 @@
+# TubeBuddy Clone — Full Build Prompt
+
+## Project Overview
+
+Build a full-stack YouTube creator optimization platform that replicates and extends TubeBuddy's functionality. The product is a **browser extension + web dashboard SaaS** that integrates deeply with YouTube Studio to provide SEO optimization, keyword research, A/B testing, bulk editing, analytics, comment management, and AI-powered content tools.
+
+The platform will be monetized via tiered subscriptions (Free, Pro, Legend, Enterprise) and must integrate with the YouTube Data API v3, Stripe for billing, and the Anthropic Claude API for AI features.
+
+---
+
+## Product Requirements
+
+### What TubeBuddy Does (Competitor Reference)
+
+TubeBuddy is a browser extension + SaaS platform for YouTube creators. It injects tools directly into YouTube Studio and provides a standalone web dashboard. Key value propositions:
+
+- YouTube SEO optimization (keyword research, tag suggestions, video scoring)
+- A/B testing of thumbnails and titles to maximize click-through rate
+- Bulk editing of video metadata across an entire channel library
+- Comment management and moderation tools
+- Analytics and competitor channel tracking
+- AI-generated titles, descriptions, and video ideas
+- Multi-channel management for agencies and enterprises
+
+---
+
+## Feature Specifications by Tier
+
+### Free Tier ($0/month)
+- Basic video SEO guidance and checklist scoring
+- Limited keyword research (daily caps apply)
+- Basic tag suggestions for videos
+- Thumbnail preview tools
+- Video upload checklist (title, description, tags, thumbnail completeness)
+- Comment filters (basic keyword blocking)
+- Limited channel analytics (views, watch time)
+- Browser extension UI injected into YouTube Studio
+
+### Pro Tier ($3.60/month billed annually, ~$4.50/month billed monthly)
+Everything in Free, plus:
+- **Keyword Explorer** — full keyword search with search volume, competition scores (0–100), weighted rankings, related keyword suggestions, trend graphs
+- **SEO Studio** — real-time optimization workspace scoring title, description, and tags together; provides actionable recommendations
+- **Best Time to Publish** — audience activity heatmap showing optimal upload windows based on subscriber behavior
+- **Tag Rankings Tracker** — shows how each video ranks for its target tags over time
+- **Search Explorer** — analyze YouTube search result pages for any keyword
+- **Enhanced Analytics** — subscriber velocity, view velocity, estimated revenue, CTR trends
+- **Competitor Tracking** — track 1–2 competitor channels (subscriber count, upload cadence, view velocity)
+- **Playlist Management** — sort playlists by analytics, filter private/unlisted videos, bulk privacy changes
+- **Comment Tools** — canned responses library, word clouds, highlight supporter comments, fast-reply mode
+- **Promo Tools** — evergreen link (always redirects to latest video), milestone tracking, social share scheduling
+
+### Legend Tier ($23.19/month billed annually, ~$28.99/month billed monthly)
+Everything in Pro, plus:
+- **A/B Testing Suite** — rotate 2 thumbnail variants and 2 title variants on alternating days; auto-tracks CTR per variant; requires statistical significance (default: 1,000+ impressions per variant); generates winner report with per-keyword CTR breakdown
+- **Thumbnail A/B Tester** — visual comparison dashboard for active experiments
+- **Unlimited Bulk Editing** — mass-edit titles, descriptions, tags, cards, end screens across entire video library (up to 1,500 videos per batch)
+- **Bulk Find & Replace** — search-and-replace text across all video metadata
+- **Advanced Competitor Analysis** — track up to 10 competitor channels; compare scoring metrics per video
+- **Historical Trend Data** — keyword ranking history, channel analytics history going back 12+ months
+- **Priority Customer Support** — faster response SLA
+
+### Enterprise Tier (Custom pricing, contact sales)
+Everything in Legend, plus:
+- **Multi-Channel Dashboard** — manage unlimited YouTube channels from a single account
+- **Role-Based Access Control** — Admin, Editor, and Viewer roles; no credential sharing required
+- **Centralized Reporting** — aggregate analytics and exports across all channels
+- **Dedicated Account Manager**
+- **Early Access to AI Features**
+- **White-Label / Agency Mode** — branded dashboard for client-facing use
+- **Team Collaboration Tools** — shared canned responses, shared keyword lists, task assignments
+
+---
+
+## Core Module Specifications
+
+### 1. Browser Extension
+- **Platform:** Chrome (Manifest V3) + Firefox (WebExtension API)
+- **Injection target:** YouTube Studio (`studio.youtube.com`) pages — Video Details, Dashboard, Comments, Analytics, Playlists
+- **Implementation:** Use content scripts with Shadow DOM isolation to avoid CSS/JS conflicts with YouTube's own scripts
+- **Communication:** Extension background service worker ↔ backend via authenticated REST API calls
+- **UI injection points:**
+  - Sidebar panel in Video Details (tag suggestions, SEO score, keyword data)
+  - Overlay badges on video thumbnails in the video list
+  - Floating toolbar in Comments section
+  - Top bar widget in Dashboard (channel health score)
+
+### 2. Keyword Engine
+- **Data sources:**
+  - YouTube Data API v3 (`search.list`, `videos.list`) for official data
+  - YouTube autocomplete endpoint (`/complete/search?client=youtube&q=...`) for suggestions
+  - Internal search volume index (built from aggregated autocomplete data over time)
+- **Metrics to compute per keyword:**
+  - Search volume (estimated monthly searches, tiered: low/medium/high/very high)
+  - Competition score (0–100, based on number of results, top video performance)
+  - Overall score / "TubeBuddy Score" (weighted composite)
+  - Related keywords list
+  - Search trend (30-day, 90-day sparkline)
+- **SEO Studio scoring:**
+  - Analyze title: keyword placement, length (40–70 chars optimal), click-worthiness
+  - Analyze description: keyword density, length, call-to-action presence, links
+  - Analyze tags: relevance, count (15–20 optimal), specificity mix (broad + niche)
+  - Output: overall SEO score (0–100) + itemized recommendations
+
+### 3. A/B Testing Engine
+- **Experiment types:** Thumbnail A/B, Title A/B, or both combined
+- **Rotation logic:** Switch active variant every 24 hours using YouTube Data API `videos.update`
+- **Tracking:**
+  - Fetch video analytics (impressions, CTR, views) via YouTube Analytics API after each rotation window
+  - Store per-variant metrics in ClickHouse (high-write analytics DB)
+  - Calculate statistical significance using Z-test (default threshold: p < 0.05 or 1,000 impressions per variant)
+- **Result report:**
+  - Per-variant CTR, impressions, and views
+  - Winning variant highlighted
+  - Confidence level displayed
+  - One-click "Apply Winner" button
+
+### 4. Bulk Processing Engine
+- **Operations supported:** Edit title, description, tags, category, visibility, scheduled publish time, cards, end screens
+- **Implementation:**
+  - Job queue: BullMQ + Redis
+  - Each bulk job is split into individual video update tasks (rate: max 1 YouTube API unit per second to avoid quota exhaustion)
+  - Progress streamed to client via Server-Sent Events (SSE)
+  - Retry logic: exponential backoff on API errors
+  - Recommended batch size: ≤1,500 videos per job
+- **Find & Replace:**
+  - Regex-supported search across title, description, tags
+  - Preview diff before applying
+  - Dry-run mode
+
+### 5. Analytics Dashboard
+- **Data sources:** YouTube Analytics API (authenticated, actual user data)
+- **Metrics tracked:**
+  - Views, watch time, average view duration, subscriber net gain
+  - CTR (impressions → clicks), impressions
+  - Revenue estimates (RPM × views / 1000) — flag as estimated
+  - Top-performing videos by metric
+  - Keyword ranking over time per video
+- **Visualization:** Line charts, bar charts, heatmaps (best publish time), sparklines
+
+### 6. Competitor Tracker
+- **Data source:** YouTube Data API v3 (public channel data only)
+- **Metrics per competitor:**
+  - Subscriber count history
+  - Upload frequency
+  - Average views per video (last 30 videos)
+  - Top performing videos
+  - Tag overlap score with user's channel
+- **Limits:** Pro = 2 channels, Legend = 10 channels, Enterprise = unlimited
+
+### 7. Comment Manager
+- **Features:**
+  - Keyword filter rules (auto-hide / auto-report matching comments)
+  - Canned responses library (create, tag, search)
+  - Fast-reply mode: keyboard shortcuts for common responses
+  - Word cloud visualization (top words from recent comments)
+  - Highlight mode: mark comments from Patreon members or recent subscribers
+  - Bulk actions: approve, delete, hide, reply to filtered sets
+
+### 8. Thumbnail Analyzer
+- **Analysis via Claude Vision API (or dedicated CV model):**
+  - Predicted CTR score (0–100)
+  - Face detection and emotion score (faces improve CTR)
+  - Text legibility score (contrast, size, readability)
+  - Color contrast score
+  - Mobile preview simulation (thumbnail at small sizes)
+  - Comparison with top-performing thumbnails in the same niche
+
+### 9. AI Tools (Claude API)
+- **Title Generator:** Given video topic + target keyword → generate 10 title options ranked by predicted CTR and SEO score
+- **Description Writer:** Given title + key points → generate SEO-optimized description with natural keyword placement
+- **Tag Suggester:** Given title + description → suggest 15–20 relevant tags ordered by specificity
+- **Video Idea Planner:** Given channel niche + past top performers → suggest 10 video ideas with estimated demand scores
+- **All AI tools:** Include channel context (niche, tone, top 5 performing videos) in system prompt for personalization
+
+### 10. Multi-Channel Hub (Enterprise)
+- **Channel switching:** Dropdown to switch active channel context across the entire dashboard
+- **Aggregate view:** Combined analytics across all channels
+- **Team management:** Invite team members by email, assign roles per channel
+- **Audit log:** Track all bulk actions and A/B test changes per user
+
+---
+
+## Technical Architecture
+
+### System Components
+
+```
+┌─────────────────────────────────────────┐
+│           Browser Extension             │
+│  (Chrome MV3 + Firefox WebExtension)    │
+│  - Content scripts (Shadow DOM)         │
+│  - Background service worker            │
+│  - Popup dashboard widget               │
+└──────────────────┬──────────────────────┘
+                   │ REST API (HTTPS)
+┌──────────────────▼──────────────────────┐
+│              API Gateway                │
+│        (Node.js + Fastify / Go)         │
+│  - Auth middleware (JWT + OAuth)        │
+│  - Rate limiting per tier               │
+│  - Request validation                   │
+└───┬────────────────┬───────────────┬────┘
+    │                │               │
+┌───▼────┐    ┌──────▼──────┐  ┌────▼────────┐
+│Keyword │    │  A/B + Bulk │  │  Analytics  │
+│ Engine │    │  Job Queue  │  │  Pipeline   │
+│Service │    │(BullMQ+Redis│  │(ClickHouse) │
+└───┬────┘    └──────┬──────┘  └────┬────────┘
+    │                │               │
+┌───▼────────────────▼───────────────▼────┐
+│              PostgreSQL                  │
+│    (users, channels, experiments,        │
+│     keywords, settings, billing)         │
+└─────────────────────────────────────────┘
+    │                │               │
+┌───▼────┐    ┌──────▼──────┐  ┌────▼─────┐
+│YouTube │    │  Stripe API │  │Claude API│
+│Data API│    │  (billing)  │  │(AI tools)│
+└────────┘    └─────────────┘  └──────────┘
+```
+
+### Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Browser Extension | Chrome MV3 (JS/TS), Firefox WebExtension |
+| Frontend Web App | Next.js 14, TypeScript, App Router |
+| UI Components | shadcn/ui, Tailwind CSS, Recharts |
+| Backend API | Node.js + Fastify (or Go for performance) |
+| Primary Database | PostgreSQL 16 (Supabase or self-hosted) |
+| Cache | Redis 7 (sessions, rate limits, job queue) |
+| Analytics DB | ClickHouse (high-volume A/B metrics, analytics timeseries) |
+| Job Queue | BullMQ + Redis |
+| Auth | Google OAuth 2.0, NextAuth.js, JWT |
+| YouTube Integration | YouTube Data API v3, YouTube Analytics API |
+| Payments | Stripe (subscriptions + usage-based billing) |
+| AI | Anthropic Claude API (claude-sonnet-4-20250514) |
+| Email | Resend or Postmark |
+| File Storage | AWS S3 or Cloudflare R2 (thumbnail variants) |
+| Frontend Hosting | Vercel |
+| Backend Hosting | Railway, Fly.io, or AWS ECS |
+| Monitoring | Sentry (errors), PostHog (product analytics) |
+
+---
+
+## Database Schema (Key Tables)
+
+```sql
+-- Users and auth
+users (id, email, name, avatar_url, google_id, created_at)
+subscriptions (id, user_id, stripe_subscription_id, tier, status, current_period_end)
+
+-- YouTube channel connections
+channels (id, user_id, youtube_channel_id, name, handle, thumbnail_url, 
+          access_token, refresh_token, token_expires_at, is_active)
+
+-- Keyword data
+keywords (id, query, search_volume_tier, competition_score, overall_score, 
+          updated_at, related_keywords jsonb)
+keyword_searches (id, user_id, channel_id, keyword_id, searched_at)
+
+-- A/B experiments
+experiments (id, channel_id, video_id, type[thumbnail|title|both], 
+             status[active|paused|complete], started_at, ended_at,
+             winner_variant, confidence_level)
+experiment_variants (id, experiment_id, variant_label[A|B], 
+                     thumbnail_url, title, impressions, clicks, ctr, views)
+
+-- Bulk jobs
+bulk_jobs (id, channel_id, user_id, operation_type, status, 
+           total_videos, processed_videos, errors jsonb, created_at)
+bulk_job_items (id, job_id, video_id, status, error_message, processed_at)
+
+-- Comments and canned replies
+canned_responses (id, channel_id, label, body, tags text[], use_count)
+comment_filters (id, channel_id, keyword, action[hide|report|delete])
+
+-- Team and enterprise
+team_members (id, account_id, user_id, role[admin|editor|viewer], 
+              channel_permissions jsonb, invited_at, accepted_at)
+```
+
+---
+
+## API Endpoints
+
+### Auth
+- `POST /auth/google` — initiate Google OAuth flow
+- `GET /auth/callback` — OAuth callback, issue JWT
+- `POST /auth/refresh` — refresh access token
+- `DELETE /auth/logout`
+
+### Channels
+- `GET /channels` — list user's connected channels
+- `POST /channels/connect` — connect a YouTube channel via OAuth
+- `DELETE /channels/:id` — disconnect a channel
+
+### Keywords
+- `GET /keywords/search?q={query}&channel_id={id}` — search keyword data
+- `GET /keywords/suggestions?video_id={id}` — tag suggestions for a video
+- `GET /keywords/rankings?channel_id={id}&video_id={id}` — tag ranking history
+
+### SEO
+- `POST /seo/score` — body: `{title, description, tags[], target_keyword}` → returns SEO score + recommendations
+
+### A/B Testing
+- `GET /experiments?channel_id={id}` — list experiments
+- `POST /experiments` — create new A/B experiment
+- `GET /experiments/:id/results` — get variant performance data
+- `POST /experiments/:id/apply-winner` — apply winning variant permanently
+- `PATCH /experiments/:id/status` — pause / resume experiment
+
+### Bulk Processing
+- `POST /bulk/update` — submit bulk update job; body: `{channel_id, video_ids[], changes{}}`
+- `POST /bulk/find-replace` — body: `{channel_id, search, replace, scope[title|description|tags]}`
+- `GET /bulk/jobs/:id` — job status
+- `GET /bulk/jobs/:id/stream` — SSE stream for live progress
+
+### Analytics
+- `GET /analytics/channel?channel_id={id}&range={30d|90d|1y}` — channel metrics
+- `GET /analytics/video/:video_id` — per-video metrics
+- `GET /analytics/best-time?channel_id={id}` — publish time heatmap
+
+### Competitors
+- `POST /competitors` — add competitor channel
+- `GET /competitors?channel_id={id}` — list tracked competitors with metrics
+- `DELETE /competitors/:id`
+
+### Comments
+- `GET /comments?channel_id={id}&filter={unanswered|flagged|recent}` — filtered comments
+- `POST /comments/:id/reply` — reply with text or canned response
+- `GET /canned-responses?channel_id={id}`
+- `POST /canned-responses`
+
+### AI Tools
+- `POST /ai/titles` — body: `{topic, keyword, channel_id}` → 10 title suggestions
+- `POST /ai/description` — body: `{title, key_points[], channel_id}` → SEO description
+- `POST /ai/tags` — body: `{title, description, channel_id}` → tag suggestions
+- `POST /ai/ideas` — body: `{channel_id, count}` → video idea list
+
+### Billing
+- `GET /billing/plans` — list plan tiers and pricing
+- `POST /billing/subscribe` — create Stripe checkout session
+- `POST /billing/portal` — create Stripe billing portal session
+- `POST /billing/webhook` — Stripe webhook handler
+
+---
+
+## Subscription Tier Feature Gates
+
+Implement a middleware `requireFeature(featureName)` that checks the user's active tier before allowing access:
+
+```typescript
+const FEATURE_GATES = {
+  keyword_explorer:         ['pro', 'legend', 'enterprise'],
+  seo_studio:               ['pro', 'legend', 'enterprise'],
+  best_time_to_publish:     ['pro', 'legend', 'enterprise'],
+  competitor_tracking:      ['pro', 'legend', 'enterprise'],
+  competitor_limit_2:       ['pro'],
+  competitor_limit_10:      ['legend', 'enterprise'],
+  bulk_editing_limited:     ['pro'],
+  bulk_editing_unlimited:   ['legend', 'enterprise'],
+  ab_testing:               ['legend', 'enterprise'],
+  thumbnail_ab_tester:      ['legend', 'enterprise'],
+  historical_data:          ['legend', 'enterprise'],
+  multi_channel:            ['enterprise'],
+  team_roles:               ['enterprise'],
+  ai_tools:                 ['legend', 'enterprise'],
+  priority_support:         ['legend', 'enterprise'],
+}
+```
+
+---
+
+## YouTube API Integration Notes
+
+### Quota Management
+- Default quota: 10,000 units/day per project
+- Key operations and costs:
+  - `search.list` = 100 units
+  - `videos.list` = 1 unit per video
+  - `videos.update` = 50 units (used for A/B rotations)
+  - `channels.list` = 1 unit
+  - YouTube Analytics API = separate quota, 200,000 units/day
+- Strategy:
+  - Cache keyword search results for 24 hours in Redis
+  - Request YouTube API quota increase (up to 1M units/day) early
+  - Use a per-user OAuth token for Analytics calls (does not count against app quota)
+  - Implement a quota tracker per project in Redis
+
+### OAuth Scopes Required
+```
+https://www.googleapis.com/auth/youtube.readonly
+https://www.googleapis.com/auth/youtube.force-ssl
+https://www.googleapis.com/auth/youtubepartner
+https://www.googleapis.com/auth/yt-analytics.readonly
+```
+
+---
+
+## Extension Content Script Architecture
+
+```javascript
+// content.js — injected into studio.youtube.com
+// Use Shadow DOM to avoid CSS conflicts
+
+class TubeOptimizerExtension {
+  constructor() {
+    this.shadowHost = null;
+    this.shadowRoot = null;
+    this.currentPage = null;
+  }
+
+  init() {
+    this.detectPage();
+    this.observeNavigation(); // YouTube is a SPA — watch for URL changes
+  }
+
+  detectPage() {
+    const url = window.location.href;
+    if (url.includes('/video/')) this.injectVideoDetailsPanel();
+    if (url.includes('/comments')) this.injectCommentToolbar();
+    if (url.includes('/analytics')) this.injectAnalyticsOverlay();
+    if (url.includes('/videos')) this.injectVideoListBadges();
+  }
+
+  injectVideoDetailsPanel() {
+    // Create shadow host, attach shadow root
+    // Inject React/Preact mini-app inside shadow root
+    // Communicate with background service worker via chrome.runtime.sendMessage
+  }
+
+  observeNavigation() {
+    // MutationObserver on document.body for YouTube SPA navigation
+    let lastUrl = location.href;
+    new MutationObserver(() => {
+      if (location.href !== lastUrl) {
+        lastUrl = location.href;
+        this.detectPage();
+      }
+    }).observe(document, { subtree: true, childList: true });
+  }
+}
+```
+
+---
+
+## A/B Testing Engine — Implementation Detail
+
+```typescript
+// Experiment rotation job (runs via BullMQ cron, every 24 hours)
+async function rotateExperimentVariant(experimentId: string) {
+  const experiment = await db.experiments.findById(experimentId);
+  const currentVariant = experiment.active_variant; // 'A' or 'B'
+  const nextVariant = currentVariant === 'A' ? 'B' : 'A';
+  const variant = experiment.variants.find(v => v.label === nextVariant);
+
+  // Fetch current analytics before switching (close current window)
+  const analytics = await youtubeAnalytics.getVideoStats(experiment.video_id);
+  await db.experimentVariants.recordWindow(currentVariant, analytics);
+
+  // Switch the video's thumbnail/title via YouTube API
+  await youtube.videos.update({
+    part: ['snippet'],
+    requestBody: {
+      id: experiment.video_id,
+      snippet: {
+        title: variant.title ?? undefined,
+        // thumbnail set separately via thumbnails.set endpoint
+      }
+    }
+  });
+
+  if (variant.thumbnail_url) {
+    await youtube.thumbnails.set({
+      videoId: experiment.video_id,
+      media: { body: await fetchThumbnailStream(variant.thumbnail_url) }
+    });
+  }
+
+  await db.experiments.update(experimentId, { active_variant: nextVariant });
+
+  // Check if experiment has reached statistical significance
+  await checkSignificanceAndMaybeComplete(experimentId);
+}
+```
+
+---
+
+## Keyword Engine — Scoring Algorithm
+
+```typescript
+interface KeywordMetrics {
+  query: string;
+  searchVolume: 'very_low' | 'low' | 'medium' | 'high' | 'very_high';
+  competitionScore: number;    // 0–100 (higher = more competitive)
+  overallScore: number;        // 0–100 (higher = better opportunity)
+  relatedKeywords: string[];
+  trendData: number[];         // 30 daily relative search volume points
+}
+
+function computeKeywordScore(
+  searchVolumeTier: number,   // 1–5
+  competitionScore: number,   // 0–100
+  channelStrengthScore: number // 0–100, user's channel authority
+): number {
+  // Higher volume + lower competition + higher channel strength = better score
+  const volumeWeight = 0.4;
+  const competitionWeight = 0.4;
+  const channelWeight = 0.2;
+
+  const volumeNorm = (searchVolumeTier / 5) * 100;
+  const competitionInverted = 100 - competitionScore;
+
+  return Math.round(
+    volumeNorm * volumeWeight +
+    competitionInverted * competitionWeight +
+    channelStrengthScore * channelWeight
+  );
+}
+```
+
+---
+
+## Build Phases & Timeline
+
+### Phase 1 — Foundation (Weeks 1–4)
+**Goal:** Working extension shell + user auth + YouTube connection
+
+- [ ] Set up monorepo (pnpm workspaces): `apps/extension`, `apps/web`, `apps/api`
+- [ ] Chrome MV3 extension scaffold with content script + background worker
+- [ ] Next.js 14 web app with App Router
+- [ ] Node.js + Fastify API server
+- [ ] PostgreSQL schema + Drizzle ORM setup
+- [ ] Google OAuth 2.0 integration (sign-in + YouTube channel connection)
+- [ ] JWT auth middleware
+- [ ] Stripe integration: plans, checkout, webhook handler
+- [ ] Basic tag suggestion UI injected into YouTube Studio video details page
+- [ ] Video upload checklist (MVP: checks title length, description, tags count, thumbnail)
+- [ ] Deploy: Vercel (web + API), Railway (Postgres + Redis)
+
+**Deliverable:** Users can install extension, connect their YouTube channel, see basic tag suggestions and upload checklist in YouTube Studio.
+
+---
+
+### Phase 2 — Keyword Engine & SEO Studio (Weeks 5–10)
+**Goal:** Pro tier feature complete
+
+- [ ] YouTube autocomplete scraper service (rate-limited, cached)
+- [ ] Keyword Explorer UI — search bar, results with score, volume, competition, trends
+- [ ] SEO Studio — real-time scoring of title/description/tags combo
+- [ ] Tag rankings tracker — daily cron job, store historical rankings
+- [ ] Best Time to Publish — fetch audience activity data from YouTube Analytics API, render heatmap
+- [ ] Competitor tracker — add channels, daily metrics fetch, comparison view
+- [ ] Enhanced analytics dashboard (views, CTR, subscriber growth, estimated revenue)
+- [ ] Comment manager — filters, canned responses, word cloud
+- [ ] Playlist management tools
+- [ ] Firefox extension port
+
+**Deliverable:** Pro tier fully functional. Users can research keywords, optimize videos with SEO Studio, track competitors, and manage comments.
+
+---
+
+### Phase 3 — A/B Testing & Bulk Processing (Weeks 11–18)
+**Goal:** Legend tier feature complete
+
+- [ ] BullMQ job queue setup (A/B rotation + bulk processing workers)
+- [ ] A/B experiment creation flow (UI + API)
+- [ ] 24-hour rotation cron job
+- [ ] Analytics collection per variant (YouTube Analytics API polling)
+- [ ] Statistical significance calculator (Z-test)
+- [ ] Experiment results dashboard (CTR comparison, winner badge, apply button)
+- [ ] Bulk video editor UI (select videos, choose operation, preview, apply)
+- [ ] Bulk find & replace with regex support and diff preview
+- [ ] SSE endpoint for live bulk job progress
+- [ ] Thumbnail A/B tester UI
+- [ ] Historical data views (12-month keyword ranking history)
+- [ ] Advanced competitor analysis (10 channels, per-video scoring)
+
+**Deliverable:** Legend tier fully functional. Users can run A/B tests on thumbnails/titles and bulk-edit their entire video library.
+
+---
+
+### Phase 4 — AI Features & Enterprise (Weeks 19–28)
+**Goal:** AI tools live + Enterprise tier complete
+
+- [ ] Claude API integration for AI title generator, description writer, tag suggester
+- [ ] Video idea planner (channel context-aware prompting)
+- [ ] Thumbnail analyzer (Claude Vision or dedicated CV model)
+- [ ] Multi-channel dashboard (channel switcher, aggregate analytics)
+- [ ] Role-based access control (RBAC) — invite team members, set per-channel roles
+- [ ] Centralized reporting — export CSV/PDF across channels
+- [ ] Audit log (all bulk actions, experiment changes, team activity)
+- [ ] White-label / agency mode (custom branding for Enterprise clients)
+- [ ] Mobile companion app — React Native, core analytics + quick reply to comments
+- [ ] Enterprise sales page + custom pricing flow
+
+**Deliverable:** Full platform feature-complete. All four tiers live. AI tools available for Legend+.
+
+---
+
+## Key Technical Risks & Mitigations
+
+| Risk | Mitigation |
+|---|---|
+| YouTube API quota exhaustion | Cache aggressively in Redis (keyword data: 24h TTL), use per-user tokens for Analytics calls, apply for quota increase to 1M units/day |
+| YouTube Studio DOM changes breaking extension injection | Use resilient selectors (data attributes > CSS classes), add automated visual regression tests with Playwright, monitor extension error rates in Sentry |
+| A/B test data contamination | Strict 24-hour rotation windows, minimum impression thresholds before declaring results, exclude videos with <200 views/day from eligibility |
+| Extension store rejection (Chrome Web Store) | Avoid `unsafe-eval` in CSP, declare all permissions in manifest, provide detailed justifications in store listing |
+| Bulk job failures mid-run | Idempotent job design (safe to retry), store progress in DB per video, allow resume from checkpoint |
+| GDPR / data privacy | Store only public YouTube data for competitor tracking, encrypt OAuth tokens at rest (AES-256), provide data deletion flow |
+
+---
+
+## Monetization & Pricing Implementation
+
+### Stripe Products to Create
+```
+Product: TubeOptimizer Pro
+  Price: $3.60/month (annual) → $43.20 billed yearly
+  Price: $4.50/month (monthly)
+  Promo code: RISINGSTAR → 50% off (eligibility: channels < 1,000 subscribers)
+
+Product: TubeOptimizer Legend
+  Price: $23.19/month (annual) → $278.28 billed yearly
+  Price: $28.99/month (monthly)
+
+Product: TubeOptimizer Enterprise
+  Price: Custom (Stripe payment links or invoice)
+```
+
+### Upgrade Prompts
+- Show locked feature badges (lock icon + tier name) on all gated features
+- Inline upgrade CTAs: "Unlock A/B Testing — Upgrade to Legend"
+- Usage limit warnings: "You've used 80% of your monthly keyword searches (Pro limit)"
+
+---
+
+## Development Environment Setup
+
+```bash
+# Prerequisites
+node >= 20, pnpm >= 9, docker (for Postgres + Redis locally)
+
+# Repo structure
+/
+├── apps/
+│   ├── extension/        # Chrome/Firefox extension (Vite + React + TypeScript)
+│   ├── web/              # Next.js 14 dashboard
+│   └── api/              # Fastify API server
+├── packages/
+│   ├── db/               # Drizzle ORM schema + migrations
+│   ├── youtube/          # YouTube API v3 + Analytics API client wrappers
+│   ├── types/            # Shared TypeScript types
+│   └── config/           # Shared ESLint, TSConfig, Tailwind config
+├── docker-compose.yml    # Postgres + Redis + ClickHouse for local dev
+└── pnpm-workspace.yaml
+
+# Environment variables needed
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+YOUTUBE_API_KEY=           # For public data (keyword search)
+DATABASE_URL=              # PostgreSQL connection string
+REDIS_URL=
+CLICKHOUSE_URL=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+ANTHROPIC_API_KEY=
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=
+JWT_SECRET=
+S3_BUCKET_NAME=
+S3_ACCESS_KEY_ID=
+S3_SECRET_ACCESS_KEY=
+```
+
+---
+
+## Success Metrics
+
+| Metric | Target (6 months post-launch) |
+|---|---|
+| Extension installs | 10,000 |
+| Registered users | 5,000 |
+| Paid subscribers | 500 |
+| MRR | $5,000 |
+| Average session time in dashboard | > 8 minutes |
+| A/B experiment completion rate | > 60% of started experiments |
+| Bulk job success rate | > 99% |
+| Extension crash rate | < 0.1% of sessions |
+
+---
+
+## Launch Checklist
+
+- [ ] Chrome Web Store listing approved
+- [ ] Firefox Add-ons listing approved
+- [ ] GDPR privacy policy + cookie consent live
+- [ ] Terms of service live
+- [ ] YouTube API project verified by Google (required for >10,000 users)
+- [ ] Stripe production keys active
+- [ ] Sentry error monitoring active
+- [ ] PostHog analytics active
+- [ ] Transactional email (welcome, billing receipts, trial expiry) live
+- [ ] Status page live (e.g., Instatus)
+- [ ] Rate limiting on all public API routes
+- [ ] Input validation on all API routes (Zod schemas)
+- [ ] SQL injection protection (parameterized queries via Drizzle ORM)
+- [ ] XSS protection headers (Content-Security-Policy)
+- [ ] OAuth token encryption at rest
+
+---
+
+*End of build prompt. This document contains everything needed to brief an engineering team, AI coding assistant, or freelancer to begin building the application from scratch.*
