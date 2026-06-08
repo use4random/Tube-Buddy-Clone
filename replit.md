@@ -1,6 +1,6 @@
-# [Project name]
+# TubePulse
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A YouTube creator optimization platform that helps creators grow their channels with SEO tools, keyword research, A/B testing, bulk editing, analytics, and AI-powered content tools.
 
 ## Run & Operate
 
