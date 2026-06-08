@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, commentsTable, cannedResponsesTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import {
   ListCommentsQueryParams,
   ReplyToCommentParams,
@@ -48,7 +48,7 @@ router.post("/comments/:commentId/reply", requireAuth, async (req: AuthRequest, 
   }
 
   if (body.data.channelId) {
-    await db.update(cannedResponsesTable).set({ useCount: 1 }).where(and(
+    await db.update(cannedResponsesTable).set({ useCount: sql`${cannedResponsesTable.useCount} + 1` }).where(and(
       eq(cannedResponsesTable.channelId, body.data.channelId),
       eq(cannedResponsesTable.body, body.data.text)
     )).catch(() => {});

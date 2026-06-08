@@ -54,11 +54,15 @@ router.get("/keywords/search", requireAuth, async (req: AuthRequest, res): Promi
       const [r] = await db.select().from(keywordsTable).where(eq(keywordsTable.query, rq));
       if (r) return r;
       const s2 = computeScore(rq);
-      const [inserted2] = await db.insert(keywordsTable).values({
-        query: rq, searchVolumeTier: s2.searchVolume, competitionScore: s2.competition,
-        overallScore: s2.overall, relatedKeywords: [], trendData: generateTrendData(),
-      }).returning().catch(() => [null]);
-      return inserted2;
+      try {
+        const [inserted2] = await db.insert(keywordsTable).values({
+          query: rq, searchVolumeTier: s2.searchVolume, competitionScore: s2.competition,
+          overallScore: s2.overall, relatedKeywords: [], trendData: generateTrendData(),
+        }).returning();
+        return inserted2;
+      } catch {
+        return null;
+      }
     })
   );
 

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --red: #f43f5e;
+    }
+    body {
+      width: 300px;
+      margin: 0;
+      padding: 16px;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .logo {
+      font-weight: 800;
+      font-size: 18px;
+      background: linear-gradient(to right, #818cf8, #f43f5e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: var(--text-main);
+      text-align: left;
+      font-size: 13px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+    .btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    .footer {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">TubePulse Companion</div>
+  </div>
+
+  <div class="status">
+    <div class="dot" id="status-dot"></div>
+    <span id="status-text">Connected to API Server</span>
+  </div>
+
+  <div class="section-title">Open in TubePulse Web App</div>
+  
+  <button class="btn" id="go-dashboard">🚀 Open Full Dashboard</button>
+  <button class="btn" id="go-seo">🎯 SEO Studio Analyzer</button>
+  <button class="btn" id="go-keywords">🔑 Keyword Explorer & Trends</button>
+  <button class="btn" id="go-bulk">⚡ Bulk Metadata Editor</button>
+  <button class="btn" id="go-experiments">🧪 Thumbnail A/B Testing</button>
+  <button class="btn" id="go-ai">🤖 AI Creator Assistant</button>
+
+  <div class="footer">
+    TubePulse Extension v1.0.0
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useSearchKeywords } from "@workspace/api-client-react";
 import { getAuthHeaders } from "@/lib/api-config";
+import { useLocation } from "wouter";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,9 +24,18 @@ const scoreColor = (s: number) => s >= 70 ? "text-green-600" : s >= 45 ? "text-y
 
 export default function KeywordsPage() {
   const { token } = useAuth();
-  const [query, setQuery] = useState("");
-  const [activeQuery, setActiveQuery] = useState("");
+  const [location] = useLocation();
+  const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get("q") ?? "");
+  const [activeQuery, setActiveQuery] = useState(() => new URLSearchParams(window.location.search).get("q") ?? "");
   const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (q) {
+      setQuery(q);
+      setActiveQuery(q);
+    }
+  }, [location]);
 
   const { data, isLoading } = useSearchKeywords(
     { q: activeQuery },

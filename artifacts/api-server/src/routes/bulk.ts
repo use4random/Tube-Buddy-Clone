@@ -23,8 +23,8 @@ router.post("/bulk/update", requireAuth, async (req: AuthRequest, res): Promise<
     jobParams: { videoIds, changes } as Record<string, unknown>,
   }).returning();
 
-  setTimeout(async () => {
-    await db.update(bulkJobsTable).set({ status: "completed", processedVideos: videoIds.length, completedAt: new Date() }).where(eq(bulkJobsTable.id, job.id));
+  setTimeout(() => {
+    db.update(bulkJobsTable).set({ status: "completed", processedVideos: videoIds.length, completedAt: new Date() }).where(eq(bulkJobsTable.id, job.id)).catch(() => {});
   }, 2000);
 
   res.status(201).json({
@@ -51,8 +51,8 @@ router.post("/bulk/find-replace", requireAuth, async (req: AuthRequest, res): Pr
     jobParams: { search, replace, scope, isRegex } as Record<string, unknown>,
   }).returning();
 
-  setTimeout(async () => {
-    await db.update(bulkJobsTable).set({ status: "completed", totalVideos: 10, processedVideos: 10, completedAt: new Date() }).where(eq(bulkJobsTable.id, job.id));
+  setTimeout(() => {
+    db.update(bulkJobsTable).set({ status: "completed", totalVideos: 10, processedVideos: 10, completedAt: new Date() }).where(eq(bulkJobsTable.id, job.id)).catch(() => {});
   }, 1500);
 
   res.status(201).json({

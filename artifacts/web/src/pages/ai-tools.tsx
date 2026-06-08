@@ -196,7 +196,7 @@ export default function AiToolsPage() {
                 <Input placeholder="Your niche (optional) e.g. tech, fitness, cooking" value={ideaNiche} onChange={e => setIdeaNiche(e.target.value)} />
                 <Button
                   className="bg-purple-600 hover:bg-purple-700 shrink-0"
-                  onClick={() => ideasMutation.mutate({ data: { channelId: 0, count: 10 } })}
+                  onClick={() => ideasMutation.mutate({ data: { channelId: 0, count: 10, niche: ideaNiche || undefined } as any })}
                   disabled={ideasMutation.isPending}
                 >
                   <Sparkles className="h-4 w-4 mr-2" />

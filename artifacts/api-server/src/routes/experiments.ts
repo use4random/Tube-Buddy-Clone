@@ -72,6 +72,10 @@ router.post("/experiments/:experimentId/apply-winner", requireAuth, async (req: 
   }
 
   const variants = await db.select().from(experimentVariantsTable).where(eq(experimentVariantsTable.experimentId, exp.id));
+  if (variants.length === 0) {
+    res.status(400).json({ error: "No variants found for this experiment" });
+    return;
+  }
   const winner = variants.reduce((best, v) => v.ctr > best.ctr ? v : best, variants[0]);
   const confidence = 95 + Math.random() * 4;
 

@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,7 +26,6 @@ const queryClient = new QueryClient({
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading, token } = useAuth();
-  const [location] = useLocation();
 
   if (isLoading && token) {
     return (

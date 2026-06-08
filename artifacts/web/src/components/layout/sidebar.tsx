@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Youtube, LayoutDashboard, Search, FileText, FlaskConical,
   Edit3, BarChart2, Users, MessageSquare, Sparkles, CreditCard,
-  LogOut, ChevronRight,
+  LogOut, ChevronRight, Download
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -36,6 +37,7 @@ export default function Sidebar() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const { channels, selectedChannelId, setSelectedChannelId } = useChannelContext();
+  const { toast } = useToast();
 
   return (
     <aside className="w-60 shrink-0 bg-gray-950 text-white flex flex-col h-full">
@@ -93,6 +95,28 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-3 border-t border-gray-800">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full bg-indigo-600 border-indigo-700 hover:bg-indigo-700 text-white font-medium mb-3 justify-center text-xs flex items-center gap-2"
+          onClick={() => {
+            const link = document.createElement("a");
+            link.href = "/extension.zip";
+            link.download = "tubepulse-extension.zip";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            toast({
+              title: "Extension Downloaded!",
+              description: "Instructions: 1. Extract 'tubepulse-extension.zip'. 2. Open chrome://extensions/ in Chrome. 3. Enable 'Developer mode'. 4. Click 'Load unpacked' and select the extracted folder.",
+              duration: 12000,
+            });
+          }}
+        >
+          <Download className="h-3.5 w-3.5" />
+          Get Chrome Extension
+        </Button>
         <div className="flex items-center gap-3 mb-3">
           <Avatar className="h-8 w-8">
             <AvatarImage src={user?.avatarUrl ?? undefined} />

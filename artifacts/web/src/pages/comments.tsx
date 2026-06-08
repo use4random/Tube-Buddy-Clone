@@ -41,10 +41,10 @@ export default function CommentsPage() {
   const replyMutation = useReplyToComment({ request: { headers: getAuthHeaders(token) } });
   const createCannedMutation = useCreateCannedResponse({ request: { headers: getAuthHeaders(token) } });
 
-  const handleReply = async (commentId: number) => {
+  const handleReply = async (commentId: string) => {
     const text = replyText[commentId];
     if (!text?.trim()) return;
-    await replyMutation.mutateAsync({ commentId: commentId as unknown as string, data: { text, channelId: selectedChannelId! } });
+    await replyMutation.mutateAsync({ commentId: String(commentId), data: { text, channelId: selectedChannelId! } });
     setReplyText(p => ({ ...p, [commentId]: "" }));
     qc.invalidateQueries();
   };
@@ -150,7 +150,7 @@ export default function CommentsPage() {
                           <Button
                             size="sm"
                             className="bg-red-600 hover:bg-red-700 self-end"
-                            onClick={() => handleReply(Number(comment.id))}
+                            onClick={() => handleReply(String(comment.id))}
                             disabled={replyMutation.isPending}
                           >
                             <Send className="h-4 w-4" />

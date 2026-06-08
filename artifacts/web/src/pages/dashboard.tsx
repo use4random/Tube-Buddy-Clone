@@ -53,7 +53,7 @@ export default function DashboardPage() {
       <div className="p-6 space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Good morning, {user?.name?.split(" ")[0]} 👋
+            {(() => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"; })()}, {user?.name?.split(" ")[0]} 👋
           </h1>
           <p className="text-gray-500 text-sm mt-1">
             {selectedChannel ? `${selectedChannel.name} — ${(selectedChannel.subscriberCount ?? 0).toLocaleString()} subscribers` : "Connect a channel to get started"}
