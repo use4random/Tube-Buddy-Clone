@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Youtube, LayoutDashboard, Search, FileText, FlaskConical,
   Edit3, BarChart2, Users, MessageSquare, Sparkles, CreditCard,
-  LogOut, ChevronRight, Download
+  LogOut, ChevronRight, Download, Plus
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -36,7 +36,7 @@ const tierColors: Record<string, string> = {
 export default function Sidebar() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
-  const { channels, selectedChannelId, setSelectedChannelId } = useChannelContext();
+  const { channels, selectedChannelId, setSelectedChannelId, setIsConnectOpen } = useChannelContext();
   const { toast } = useToast();
 
   return (
@@ -50,25 +50,45 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {channels.length > 0 && (
-        <div className="px-3 py-3 border-b border-gray-800">
-          <Select
-            value={selectedChannelId?.toString() ?? ""}
-            onValueChange={v => setSelectedChannelId(parseInt(v))}
+      <div className="px-3 py-3 border-b border-gray-800">
+        {channels.length > 0 ? (
+          <div className="flex items-center gap-1.5">
+            <Select
+              value={selectedChannelId?.toString() ?? ""}
+              onValueChange={v => setSelectedChannelId(parseInt(v))}
+            >
+              <SelectTrigger className="flex-1 bg-gray-900 border-gray-700 text-white text-sm h-9">
+                <SelectValue placeholder="Select channel" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border-gray-700">
+                {channels.map(c => (
+                  <SelectItem key={c.id} value={c.id.toString()} className="text-white focus:bg-gray-800">
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 bg-gray-900 border-gray-700 hover:bg-gray-800 hover:text-white text-gray-400 shrink-0"
+              onClick={() => setIsConnectOpen(true)}
+              title="Connect YouTube Channel"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            className="w-full bg-gray-900 border-gray-700 hover:bg-gray-800 hover:text-white text-gray-400 text-xs h-9 justify-start gap-2"
+            onClick={() => setIsConnectOpen(true)}
           >
-            <SelectTrigger className="bg-gray-900 border-gray-700 text-white text-sm h-9">
-              <SelectValue placeholder="Select channel" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-900 border-gray-700">
-              {channels.map(c => (
-                <SelectItem key={c.id} value={c.id.toString()} className="text-white focus:bg-gray-800">
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+            <Plus className="h-3.5 w-3.5" />
+            Connect Channel
+          </Button>
+        )}
+      </div>
 
       <nav className="flex-1 overflow-y-auto py-3 space-y-0.5 px-2">
         {navItems.map(({ icon: Icon, label, href, badge }) => {

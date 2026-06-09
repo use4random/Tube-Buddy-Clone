@@ -12,6 +12,7 @@ import commentsRouter from "./comments";
 import aiRouter from "./ai";
 import billingRouter from "./billing";
 import dashboardRouter from "./dashboard";
+import googleOauthRouter from "./google-oauth";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(commentsRouter);
 router.use(aiRouter);
 router.use(billingRouter);
 router.use(dashboardRouter);
+router.use(googleOauthRouter);
 
 export default router;

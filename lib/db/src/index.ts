@@ -84,10 +84,19 @@ if (useRealDb) {
 
   function getTableName(table: any): string {
     if (typeof table === 'string') return table;
+    if (table && typeof table === 'object') {
+      const syms = Object.getOwnPropertySymbols(table);
+      const nameSym = syms.find(s => s.toString().includes("drizzle:Name"));
+      if (nameSym && table[nameSym]) return table[nameSym];
+    }
     const sym = Symbol.for('drizzle:Name');
     if (table && table[sym]) return table[sym];
     if (table && table._ && table._.name) return table._.name;
     return String(table);
+  }
+
+  function toCamelCase(str: string): string {
+    return str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
   }
 
   function evaluateCondition(expr: any, row: any): boolean {
@@ -101,9 +110,10 @@ if (useRealDb) {
       const valObj = chunks[3];
       if (colObj && opChunk && valObj) {
         const colName = colObj.name;
+        const camelColName = toCamelCase(colName);
         const op = (opChunk.value?.[0] || opChunk.value || "").trim();
         const val = valObj.value;
-        const rowVal = row[colName];
+        const rowVal = row[camelColName] !== undefined ? row[camelColName] : row[colName];
 
         if (op === '=') return String(rowVal) === String(val);
         if (op === '>=') return new Date(rowVal) >= new Date(val);

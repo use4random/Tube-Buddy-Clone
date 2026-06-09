@@ -6,8 +6,9 @@ import DashboardLayout from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Eye, Users, TrendingUp, FlaskConical, Search, Zap, DollarSign } from "lucide-react";
+import { Eye, Users, TrendingUp, FlaskConical, Search, Zap, DollarSign, Youtube, Plus } from "lucide-react";
 
 function StatCard({ title, value, change, icon: Icon, iconColor }: {
   title: string; value: string | number; change?: number; icon: React.ElementType; iconColor: string;
@@ -34,7 +35,7 @@ function StatCard({ title, value, change, icon: Icon, iconColor }: {
 
 export default function DashboardPage() {
   const { user, token } = useAuth();
-  const { selectedChannelId, selectedChannel } = useChannelContext();
+  const { selectedChannelId, selectedChannel, setIsConnectOpen } = useChannelContext();
 
   const { data: summary, isLoading: sumLoading } = useGetDashboardSummary(
     { channelId: selectedChannelId! },
@@ -60,66 +61,86 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {loading ? Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-28" />) : <>
-            <StatCard title="Total Views" value={summary?.totalViews ?? 0} change={summary?.viewsGrowth} icon={Eye} iconColor="bg-blue-50 text-blue-600" />
-            <StatCard title="Subscribers" value={summary?.totalSubscribers ?? 0} change={summary?.subscriberGrowth} icon={Users} iconColor="bg-green-50 text-green-600" />
-            <StatCard title="SEO Score Avg" value={`${summary?.seoScoreAverage ?? 0}/100`} icon={TrendingUp} iconColor="bg-orange-50 text-orange-600" />
-            <StatCard title="Est. Revenue" value={`$${summary?.estimatedMonthlyRevenue?.toFixed(2) ?? "0.00"}`} icon={DollarSign} iconColor="bg-purple-50 text-purple-600" />
-            <StatCard title="Active Experiments" value={summary?.activeExperiments ?? 0} icon={FlaskConical} iconColor="bg-pink-50 text-pink-600" />
-            <StatCard title="Keyword Searches" value={summary?.recentKeywordSearches ?? 0} icon={Search} iconColor="bg-yellow-50 text-yellow-600" />
-            <StatCard title="Pending Bulk Jobs" value={summary?.pendingBulkJobs ?? 0} icon={Zap} iconColor="bg-indigo-50 text-indigo-600" />
-            <StatCard title="Top Tag" value={summary?.topPerformingTag ?? "—"} icon={TrendingUp} iconColor="bg-teal-50 text-teal-600" />
-          </>}
-        </div>
+        {!selectedChannelId ? (
+          <div className="flex flex-col items-center justify-center p-8 text-center max-w-xl mx-auto my-12 bg-white border border-gray-100 rounded-2xl shadow-xl">
+            <div className="bg-red-50 text-red-600 rounded-full p-4 mb-4">
+              <Youtube className="h-12 w-12" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Connect your YouTube Channel</h2>
+            <p className="text-gray-500 max-w-sm mb-6 text-xs leading-relaxed">
+              TubePulse needs to connect to your YouTube channel to pull SEO keywords, A/B experiments, video performance analytics, and recent comments.
+            </p>
+            <Button 
+              className="bg-red-600 hover:bg-red-700 text-white font-medium px-6 py-2 text-xs rounded-lg gap-2"
+              onClick={() => setIsConnectOpen(true)}
+            >
+              <Plus className="h-4 w-4" /> Connect Channel Now
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {loading ? Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-28" />) : <>
+                <StatCard title="Total Views" value={summary?.totalViews ?? 0} change={summary?.viewsGrowth} icon={Eye} iconColor="bg-blue-50 text-blue-600" />
+                <StatCard title="Subscribers" value={summary?.totalSubscribers ?? 0} change={summary?.subscriberGrowth} icon={Users} iconColor="bg-green-50 text-green-600" />
+                <StatCard title="SEO Score Avg" value={`${summary?.seoScoreAverage ?? 0}/100`} icon={TrendingUp} iconColor="bg-orange-50 text-orange-600" />
+                <StatCard title="Est. Revenue" value={`$${summary?.estimatedMonthlyRevenue?.toFixed(2) ?? "0.00"}`} icon={DollarSign} iconColor="bg-purple-50 text-purple-600" />
+                <StatCard title="Active Experiments" value={summary?.activeExperiments ?? 0} icon={FlaskConical} iconColor="bg-pink-50 text-pink-600" />
+                <StatCard title="Keyword Searches" value={summary?.recentKeywordSearches ?? 0} icon={Search} iconColor="bg-yellow-50 text-yellow-600" />
+                <StatCard title="Pending Bulk Jobs" value={summary?.pendingBulkJobs ?? 0} icon={Zap} iconColor="bg-indigo-50 text-indigo-600" />
+                <StatCard title="Top Tag" value={summary?.topPerformingTag ?? "—"} icon={TrendingUp} iconColor="bg-teal-50 text-teal-600" />
+              </>}
+            </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Views — Last 30 Days</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {analyticsLoading ? <Skeleton className="h-52" /> : (
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={analytics?.dailyMetrics ?? []}>
-                  <defs>
-                    <linearGradient id="viewGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#dc2626" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={d => d.slice(5)} />
-                  <YAxis tick={{ fontSize: 10 }} width={45} />
-                  <Tooltip formatter={(v: number) => [v.toLocaleString(), "Views"]} />
-                  <Area type="monotone" dataKey="views" stroke="#dc2626" fill="url(#viewGrad)" strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Views — Last 30 Days</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {analyticsLoading ? <Skeleton className="h-52" /> : (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <AreaChart data={analytics?.dailyMetrics ?? []}>
+                      <defs>
+                        <linearGradient id="viewGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#dc2626" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={d => d.slice(5)} />
+                      <YAxis tick={{ fontSize: 10 }} width={45} />
+                      <Tooltip formatter={(v: number) => [v.toLocaleString(), "Views"]} />
+                      <Area type="monotone" dataKey="views" stroke="#dc2626" fill="url(#viewGrad)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
 
-        {analytics?.topVideos && analytics.topVideos.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Top Videos This Month</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {analytics.topVideos.map((v, i) => (
-                  <div key={v.videoId} className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">
-                      {i + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{v.title}</p>
-                      <p className="text-xs text-gray-500">{v.views.toLocaleString()} views · {v.ctr}% CTR</p>
-                    </div>
-                    <Badge variant="outline" className="text-xs">{v.ctr}% CTR</Badge>
+            {analytics?.topVideos && analytics.topVideos.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Top Videos This Month</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {analytics.topVideos.map((v, i) => (
+                      <div key={v.videoId} className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">
+                          {i + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{v.title}</p>
+                          <p className="text-xs text-gray-500">{v.views.toLocaleString()} views · {v.ctr}% CTR</p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">{v.ctr}% CTR</Badge>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     </DashboardLayout>

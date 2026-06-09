@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { useListChannels } from "@workspace/api-client-react";
 import type { Channel } from "@workspace/api-client-react";
 import { useAuth } from "./auth";
+import ConnectChannelDialog from "@/components/layout/connect-channel-dialog";
 
 type ChannelContextType = {
   channels: Channel[];
@@ -9,19 +10,23 @@ type ChannelContextType = {
   selectedChannel: Channel | null;
   setSelectedChannelId: (id: number | null) => void;
   isLoading: boolean;
+  isConnectOpen: boolean;
+  setIsConnectOpen: (open: boolean) => void;
+  refetchChannels: () => Promise<any>;
 };
 
 const ChannelContext = createContext<ChannelContextType | null>(null);
 
 export function ChannelProvider({ children }: { children: React.ReactNode }) {
   const { user, token } = useAuth();
+  const [isConnectOpen, setIsConnectOpen] = useState(false);
   
   const [selectedChannelId, setSelectedChannelId] = useState<number | null>(() => {
     const saved = localStorage.getItem("selectedChannelId");
     return saved ? parseInt(saved, 10) : null;
   });
 
-  const { data: channels = [], isLoading } = useListChannels({
+  const { data: channels = [], isLoading, refetch } = useListChannels({
     query: {
       enabled: !!user,
     } as any,
@@ -55,9 +60,21 @@ export function ChannelProvider({ children }: { children: React.ReactNode }) {
         selectedChannel,
         setSelectedChannelId,
         isLoading,
+        isConnectOpen,
+        setIsConnectOpen,
+        refetchChannels: refetch,
       }}
     >
       {children}
+      <ConnectChannelDialog
+        open={isConnectOpen}
+        onOpenChange={setIsConnectOpen}
+        onSuccess={async (newId) => {
+          await refetch();
+          setSelectedChannelId(newId);
+          setIsConnectOpen(false);
+        }}
+      />
     </ChannelContext.Provider>
   );
 }
@@ -69,3 +86,4 @@ export function useChannelContext() {
   }
   return context;
 }
+
