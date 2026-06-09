@@ -131,9 +131,23 @@ export default function ConnectChannelDialog({
                   Connect your actual YouTube Channel securely using Google Authentication:
                 </p>
                 <Button
-                  onClick={() => {
-                    if (token) {
-                      window.location.href = `/api/auth/google?token=${encodeURIComponent(token)}`;
+                  type="button"
+                  onClick={async () => {
+                    if (!token) {
+                      toast({
+                        title: "Authentication Error",
+                        description: "You must be logged in to connect a channel.",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    try {
+                      const res = await fetch(`/api/auth/google/url?token=${encodeURIComponent(token)}`);
+                      if (!res.ok) throw new Error("Failed to get auth URL");
+                      const data = await res.json();
+                      window.location.assign(data.url);
+                    } catch (e: any) {
+                      toast({ title: "Error", description: e.message, variant: "destructive" });
                     }
                   }}
                   className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold text-xs h-10 flex items-center justify-center gap-2 cursor-pointer transition-colors"

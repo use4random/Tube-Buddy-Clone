@@ -16,6 +16,33 @@ const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "http://localhost:5000/api/auth/google/callback";
 
+router.get("/auth/google/url", async (req, res): Promise<void> => {
+  const token = req.query.token as string;
+  if (!token) {
+    res.status(400).json({ error: "Authentication token is required" });
+    return;
+  }
+
+  let userId: number;
+  try {
+    const payload = verifyToken(token);
+    userId = payload.userId;
+  } catch (err) {
+    res.status(401).json({ error: "Invalid or expired session token" });
+    return;
+  }
+
+  if (!CLIENT_ID || !CLIENT_SECRET) {
+    logger.info({ userId }, "Google OAuth credentials not configured. Falling back to sandbox.");
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173/dashboard";
+    res.json({ url: frontendUrl });
+    return;
+  }
+
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent("https://www.googleapis.com/auth/youtube.readonly")}&access_type=offline&prompt=consent&state=${encodeURIComponent(token)}`;
+  res.json({ url: authUrl });
+});
+
 router.get("/auth/google", async (req, res): Promise<void> => {
   const token = req.query.token as string;
   if (!token) {
