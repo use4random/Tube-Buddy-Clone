@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "go-keywords": "/keywords",
     "go-bulk": "/bulk",
     "go-experiments": "/experiments",
-    "go-ai": "/ai-tools"
+    "go-ai": "/ai"
   };
 
   Object.entries(navMap).forEach(([id, route]) => {
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusDot = document.getElementById("status-dot");
   const statusText = document.getElementById("status-text");
 
-  fetch(`${API_BASE}/health`)
+  fetch(`${API_BASE}/healthz`)
     .then((res) => {
       if (res.ok) {
         statusDot.style.background = "#10b981";

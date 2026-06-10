@@ -44,7 +44,7 @@ function injectWatchPanel(videoId) {
 
   chrome.runtime.sendMessage({
     type: "API_REQUEST",
-    data: { endpoint: `/analytics/video?videoId=${videoId}` }
+    data: { endpoint: `/analytics/video?videoId=${videoId}&channelId=1` }
   }, (res) => {
     if (res && res.status === 200 && res.data) {
       const loadingEl = document.getElementById("tubepulse-watch-loading");

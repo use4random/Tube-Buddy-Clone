@@ -13,4 +13,8 @@ export interface SeoScoreResult {
   descriptionScore: number;
   tagsScore: number;
   recommendations: SeoRecommendation[];
+  viewershipIndex?: string;
+  predictedMonthlyViews?: number;
+  matchedTrends?: string[];
+  trendingSuggestions?: string[];
 }

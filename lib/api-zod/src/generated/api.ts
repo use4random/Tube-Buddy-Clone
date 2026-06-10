@@ -198,7 +198,11 @@ export const ScoreSeoResponse = zod.object({
   "type": zod.enum(['title', 'description', 'tags']),
   "message": zod.string(),
   "priority": zod.enum(['low', 'medium', 'high'])
-}))
+})),
+  "viewershipIndex": zod.string().optional(),
+  "predictedMonthlyViews": zod.number().optional(),
+  "matchedTrends": zod.array(zod.string()).optional(),
+  "trendingSuggestions": zod.array(zod.string()).optional()
 })
 
 
@@ -689,6 +693,26 @@ export const GetSubscriptionResponse = zod.object({
   "status": zod.enum(['active', 'canceled', 'past_due', 'trialing']),
   "currentPeriodEnd": zod.string().nullish(),
   "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Create a Stripe checkout session for a tier
+ */
+export const CreateCheckoutSessionBody = zod.object({
+  "tier": zod.enum(['pro', 'legend'])
+})
+
+export const CreateCheckoutSessionResponse = zod.object({
+  "url": zod.string()
+})
+
+
+/**
+ * @summary Create a Stripe customer portal session
+ */
+export const CreatePortalSessionResponse = zod.object({
+  "url": zod.string()
 })
 
 

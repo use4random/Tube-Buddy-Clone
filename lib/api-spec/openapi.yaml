@@ -827,6 +827,58 @@ paths:
               schema:
                 $ref: "#/components/schemas/Subscription"
 
+  /billing/subscribe:
+    post:
+      operationId: createCheckoutSession
+      tags: [billing]
+      summary: Create a Stripe checkout session for a tier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutSessionInput"
+      responses:
+        "200":
+          description: Checkout session URL
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                properties:
+                  url:
+                    type: string
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /billing/portal:
+    post:
+      operationId: createPortalSession
+      tags: [billing]
+      summary: Create a Stripe customer portal session
+      responses:
+        "200":
+          description: Customer portal URL
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                properties:
+                  url:
+                    type: string
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -863,6 +915,14 @@ components:
           type: string
       required:
         - error
+
+    CheckoutSessionInput:
+      type: object
+      required: [tier]
+      properties:
+        tier:
+          type: string
+          enum: [pro, legend]
 
     RegisterInput:
       type: object
@@ -1089,6 +1149,18 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SeoRecommendation"
+        viewershipIndex:
+          type: string
+        predictedMonthlyViews:
+          type: integer
+        matchedTrends:
+          type: array
+          items:
+            type: string
+        trendingSuggestions:
+          type: array
+          items:
+            type: string
 
     SeoRecommendation:
       type: object

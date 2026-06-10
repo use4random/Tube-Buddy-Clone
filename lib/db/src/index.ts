@@ -53,6 +53,7 @@ if (useRealDb) {
         userId: 1,
         tier: "free",
         status: "active",
+        currentPeriodEnd: null,
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -73,12 +74,13 @@ if (useRealDb) {
       { id: "yt_c8", channelId: 1, videoId: "xyz789abc", videoTitle: "The Perfect Upload Schedule", authorName: "Tom W", text: "I've been struggling with monetization for ages. Would love a dedicated video on AdSense approval tips.", likeCount: 19, isReplied: false, isFlagged: false, publishedAt: new Date(now - 5 * hr) },
     ],
     canned_responses: [
-      { id: 1, channelId: 1, label: "Thank you", body: "Thank you so much! I really appreciate the feedback and support.", useCount: 12, tags: ["thanks", "growth"] },
-      { id: 2, channelId: 1, label: "Post frequency", body: "I post new videos every Tuesday and Thursday at 10 AM EST. Stay tuned!", useCount: 5, tags: ["schedule"] },
+      { id: 1, channelId: 1, label: "Thank you", body: "Thank you so much! I really appreciate the feedback and support.", useCount: 12, tags: ["thanks", "growth"], createdAt: new Date() },
+      { id: 2, channelId: 1, label: "Post frequency", body: "I post new videos every Tuesday and Thursday at 10 AM EST. Stay tuned!", useCount: 5, tags: ["schedule"], createdAt: new Date() },
     ],
+    comment_filters: [],
     competitors: [
-      { id: 1, channelId: 1, youtubeChannelId: "UC_comp1", name: "Growth Guru", handle: "@growthguru", subscriberCount: 45000, videoCount: 120, avgViews: 8500, uploadFrequency: 2.5, createdAt: new Date() },
-      { id: 2, channelId: 1, youtubeChannelId: "UC_comp2", name: "Video Academy", handle: "@videoacademy", subscriberCount: 92000, videoCount: 310, avgViews: 15400, uploadFrequency: 1.0, createdAt: new Date() },
+      { id: 1, channelId: 1, youtubeChannelId: "UC_comp1", name: "Growth Guru", handle: "@growthguru", thumbnailUrl: null, subscriberCount: 45000, videoCount: 120, averageViews: 8500, uploadFrequency: 2.5, lastFetchedAt: null, createdAt: new Date() },
+      { id: 2, channelId: 1, youtubeChannelId: "UC_comp2", name: "Video Academy", handle: "@videoacademy", thumbnailUrl: null, subscriberCount: 92000, videoCount: 310, averageViews: 15400, uploadFrequency: 1.0, lastFetchedAt: null, createdAt: new Date() },
     ],
   };
 

@@ -1,15 +1,19 @@
-try {
-  console.log("Attempting to load .env from current working directory:", process.cwd());
-  process.loadEnvFile(".env");
-  console.log("Successfully loaded .env from current directory");
-} catch (e: any) {
-  console.log("Could not load .env from current directory:", e.message);
+if (typeof process.loadEnvFile === "function") {
   try {
-    process.loadEnvFile("../../.env");
-    console.log("Successfully loaded .env from '../../.env'");
-  } catch (err2: any) {
-    console.log("Could not load .env from '../../.env' either:", err2.message);
+    console.log("Attempting to load .env from current working directory:", process.cwd());
+    process.loadEnvFile(".env");
+    console.log("Successfully loaded .env from current directory");
+  } catch (e: any) {
+    console.log("Could not load .env from current directory:", e.message);
+    try {
+      process.loadEnvFile("../../.env");
+      console.log("Successfully loaded .env from '../../.env'");
+    } catch (err2: any) {
+      console.log("Could not load .env from '../../.env' either:", err2.message);
+    }
   }
+} else {
+  console.log("process.loadEnvFile not available (Node < 20.12). Skipping .env auto-load.");
 }
 
 console.log("Loaded GOOGLE_CLIENT_ID status:", !!process.env.GOOGLE_CLIENT_ID);

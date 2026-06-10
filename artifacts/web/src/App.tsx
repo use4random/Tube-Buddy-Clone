@@ -17,6 +17,7 @@ import CompetitorsPage from "@/pages/competitors";
 import CommentsPage from "@/pages/comments";
 import AiToolsPage from "@/pages/ai-tools";
 import BillingPage from "@/pages/billing";
+import MockCheckoutPage from "@/pages/mock-checkout";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,6 +72,7 @@ function Router() {
       <Route path="/comments" component={() => <ProtectedRoute component={CommentsPage} />} />
       <Route path="/ai" component={() => <ProtectedRoute component={AiToolsPage} />} />
       <Route path="/billing" component={() => <ProtectedRoute component={BillingPage} />} />
+      <Route path="/billing/mock-checkout" component={() => <ProtectedRoute component={MockCheckoutPage} />} />
       <Route component={NotFound} />
     </Switch>
   );

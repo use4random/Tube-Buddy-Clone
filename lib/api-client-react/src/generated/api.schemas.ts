@@ -13,6 +13,18 @@ export interface ErrorResponse {
   error: string;
 }
 
+export type CheckoutSessionInputTier = typeof CheckoutSessionInputTier[keyof typeof CheckoutSessionInputTier];
+
+
+export const CheckoutSessionInputTier = {
+  pro: 'pro',
+  legend: 'legend',
+} as const;
+
+export interface CheckoutSessionInput {
+  tier: CheckoutSessionInputTier;
+}
+
 export interface RegisterInput {
   /** @minLength 1 */
   name: string;
@@ -213,6 +225,10 @@ export interface SeoScoreResult {
   descriptionScore: number;
   tagsScore: number;
   recommendations: SeoRecommendation[];
+  viewershipIndex?: string;
+  predictedMonthlyViews?: number;
+  matchedTrends?: string[];
+  trendingSuggestions?: string[];
 }
 
 export type ExperimentType = typeof ExperimentType[keyof typeof ExperimentType];
@@ -685,6 +701,14 @@ export const ListCommentsFilter = {
 
 export type ListCannedResponsesParams = {
 channelId: number;
+};
+
+export type CreateCheckoutSession200 = {
+  url: string;
+};
+
+export type CreatePortalSession200 = {
+  url: string;
 };
 
 export type GetDashboardSummaryParams = {
